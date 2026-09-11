@@ -6,10 +6,27 @@ import {
   getRevenueByTourCategory,
   getOccupancyRoster,
 } from "@/server/domain/admin/reporting";
-import { formatUSD, formatDayShort } from "@/lib/format";
+import { formatUSD } from "@/lib/format";
 import { StatCard } from "@/components/admin/StatCard";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ExportCsvButton } from "@/components/admin/ExportCsvButton";
+import { TrendChart } from "@/components/admin/TrendChart";
+import { Progress } from "@/components/ui/progress";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export const metadata: Metadata = { title: "Reportes · admin" };
 
@@ -22,28 +39,31 @@ function BarList({
 }) {
   const max = Math.max(1, ...groups.map((g) => g.revenue));
   return (
-    <div className="rounded-2xl border border-line bg-white p-5 shadow-soft">
-      <h2 className="text-base font-bold tracking-tight text-ink">{title}</h2>
-      <ul className="mt-4 space-y-3">
-        {groups.length === 0 && <li className="text-sm text-mute">Sin datos todavía.</li>}
-        {groups.map((g) => (
-          <li key={g.key}>
-            <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
-              <span className="font-semibold text-ink">{g.key}</span>
-              <span className="tabular-nums text-mute">
-                {g.bookings} reservas · {formatUSD(g.revenue)} · {formatUSD(g.commission)} comisión
-              </span>
-            </div>
-            <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted/70">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-coral to-coral-deep"
-                style={{ width: `${Math.max(3, (g.revenue / max) * 100)}%` }}
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="space-y-3">
+          {groups.length === 0 && <li className="text-sm text-mute">Sin datos todavía.</li>}
+          {groups.map((g) => (
+            <li key={g.key}>
+              <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
+                <span className="font-semibold text-ink">{g.key}</span>
+                <span className="tabular-nums text-mute">
+                  {g.bookings} reservas · {formatUSD(g.revenue)} · {formatUSD(g.commission)} comisión
+                </span>
+              </div>
+              <Progress
+                value={(g.revenue / max) * 100}
+                className="h-2.5 bg-muted/70"
+                indicatorClassName="rounded-full bg-gradient-to-r from-coral to-coral-deep"
               />
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -55,13 +75,12 @@ export default async function AdminReportsPage() {
     getRevenueByTourCategory(),
     getOccupancyRoster(),
   ]);
-  const maxTrend = Math.max(1, ...trend.map((d) => d.count));
 
   return (
     <section className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-coral-deep">Reportes</p>
+          <p className="eyebrow text-coral-deep">Reportes</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">Reportes</h1>
         </div>
         <ExportCsvButton />
@@ -83,63 +102,57 @@ export default async function AdminReportsPage() {
         <BarList title="Ingresos por categoría de tour" groups={categories} />
       </div>
 
-      <div className="rounded-2xl border border-line bg-white p-5 shadow-soft">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-base font-bold tracking-tight text-ink">Reservas · últimos 30 días</h2>
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-mute">
-            <BarChart3 className="size-3.5 text-coral" aria-hidden />
-            {trend.reduce((a, b) => a + b.count, 0)} reservas
-          </span>
-        </div>
-        <div className="mt-5 flex h-32 items-end gap-1">
-          {trend.map((d) => (
-            <div key={d.date} className="flex-1">
-              <div
-                className="w-full rounded-t-md bg-coral transition-colors duration-150 hover:bg-coral-deep"
-                style={{ height: `${Math.max(5, (d.count / maxTrend) * 100)}%` }}
-                title={`${d.date}: ${d.count}`}
-              />
-            </div>
-          ))}
-        </div>
-        <div className="mt-2 flex justify-between text-[10px] font-medium text-faint">
-          <span>{formatDayShort(trend[0]?.date ?? "")}</span>
-          <span>hoy</span>
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Reservas · últimos 30 días</CardTitle>
+          <CardAction>
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-mute">
+              <BarChart3 className="size-3.5 text-coral" aria-hidden />
+              {trend.reduce((a, b) => a + b.count, 0)} reservas
+            </span>
+          </CardAction>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <TrendChart data={trend} />
+        </CardContent>
+      </Card>
 
-      <div className="overflow-x-auto rounded-2xl border border-line bg-white shadow-soft">
-        <div className="flex items-center justify-between gap-3 px-5 pt-5">
-          <h2 className="text-base font-bold tracking-tight text-ink">Ocupación por casa</h2>
-          <p className="text-xs text-mute">Solo reservas confirmadas</p>
-        </div>
-        <table className="mt-3 w-full min-w-140 text-sm">
-          <thead className="border-b border-line bg-muted/50 text-left text-[11px] font-semibold uppercase tracking-wide text-mute">
-            <tr>
-              <th className="px-5 py-3">Casa</th>
-              <th className="px-5 py-3">Zona</th>
-              <th className="px-5 py-3">Estado</th>
-              <th className="px-5 py-3 text-right">Reservas</th>
-              <th className="px-5 py-3 text-right">Noches</th>
-              <th className="px-5 py-3 text-right">Prom. días</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
-            {roster.map((r) => (
-              <tr key={r.name}>
-                <td className="px-5 py-3 font-medium text-ink">{r.name}</td>
-                <td className="px-5 py-3 text-mute">{r.zone}</td>
-                <td className="px-5 py-3">
-                  <StatusBadge status={r.status} />
-                </td>
-                <td className="px-5 py-3 text-right tabular-nums text-ink">{r.bookings}</td>
-                <td className="px-5 py-3 text-right tabular-nums text-ink">{r.nights}</td>
-                <td className="px-5 py-3 text-right tabular-nums text-mute">{r.avgNights.toFixed(1)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Ocupación por casa</CardTitle>
+          <CardAction>
+            <p className="text-xs text-mute">Solo reservas confirmadas</p>
+          </CardAction>
+        </CardHeader>
+        <CardContent className="px-0 pb-0">
+          <Table>
+            <TableHeader className="bg-muted/50">
+              <TableRow>
+                <TableHead>Casa</TableHead>
+                <TableHead>Zona</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead className="text-right">Reservas</TableHead>
+                <TableHead className="text-right">Noches</TableHead>
+                <TableHead className="text-right">Prom. días</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {roster.map((r) => (
+                <TableRow key={r.name}>
+                  <TableCell className="font-medium text-ink">{r.name}</TableCell>
+                  <TableCell className="text-mute">{r.zone}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={r.status} />
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-ink">{r.bookings}</TableCell>
+                  <TableCell className="text-right tabular-nums text-ink">{r.nights}</TableCell>
+                  <TableCell className="text-right tabular-nums text-mute">{r.avgNights.toFixed(1)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </section>
   );
 }

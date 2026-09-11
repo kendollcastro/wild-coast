@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import type { BookingStatus, CommissionStatus, ListingStatus } from "@/server/db/schema.types";
 
 const styles: Record<string, string> = {
@@ -20,10 +21,8 @@ const labels: Record<string, string> = {
 
 export function StatusBadge({ status }: { status: BookingStatus | CommissionStatus | ListingStatus }) {
   return (
-    <span
-      className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${styles[status] ?? "bg-muted text-mute"}`}
-    >
+    <Badge variant="secondary" className={`rounded-full px-2.5 font-semibold ${styles[status] ?? "bg-muted text-mute"}`}>
       {labels[status] ?? status}
-    </span>
+    </Badge>
   );
 }

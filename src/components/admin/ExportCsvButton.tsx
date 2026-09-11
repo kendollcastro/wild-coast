@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { Download } from "lucide-react";
 import { exportBookingsCsvAction } from "@/app/admin/reporting-actions";
+import { Button } from "@/components/ui/button";
 
 export function ExportCsvButton() {
   const [pending, startTransition] = useTransition();
@@ -22,14 +23,15 @@ export function ExportCsvButton() {
   };
 
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
+      size="lg"
       onClick={onExport}
       disabled={pending}
-      className="inline-flex h-11 items-center gap-2 rounded-xl border border-line bg-white px-4 text-sm font-semibold text-ink transition hover:bg-muted/40 disabled:opacity-60"
     >
       <Download className="size-4" aria-hidden />
       {pending ? "Generando…" : "Exportar CSV"}
-    </button>
+    </Button>
   );
 }

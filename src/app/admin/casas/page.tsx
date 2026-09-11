@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BedDouble, ChevronRight, Home, Plus } from "lucide-react";
+import { BedDouble, Home, Plus } from "lucide-react";
 import { listAdminProperties } from "@/server/domain/admin/catalog";
 import { formatUSD } from "@/lib/format";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { RowActions } from "@/components/admin/RowActions";
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Casas · admin" };
 
@@ -27,16 +29,15 @@ export default async function AdminPropertiesPage({
     <section className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-coral-deep">Catálogo</p>
+          <p className="eyebrow text-coral-deep">Catálogo</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">Casas</h1>
         </div>
-        <Link
-          href="/admin/casas/nueva"
-          className="inline-flex h-11 items-center gap-2 rounded-xl bg-ink px-4 text-sm font-semibold text-white transition hover:bg-coral-deep"
-        >
-          <Plus className="size-4" aria-hidden />
-          Nueva casa
-        </Link>
+        <Button asChild size="lg" className="rounded-xl px-4">
+          <Link href="/admin/casas/nueva">
+            <Plus className="size-4" aria-hidden />
+            Nueva casa
+          </Link>
+        </Button>
       </div>
 
       <form className="flex flex-wrap items-center gap-3" method="get">
@@ -44,9 +45,9 @@ export default async function AdminPropertiesPage({
           name="q"
           defaultValue={params.q}
           placeholder="Buscar por nombre, slug o zona…"
-          className="h-11 w-full min-w-0 flex-1 rounded-xl border border-line bg-white px-3.5 text-sm text-ink outline-1 outline-transparent transition focus:border-coral focus:outline-coral sm:max-w-xs"
+          className="h-11 w-full min-w-0 flex-1 rounded-xl border border-input bg-white px-3.5 text-sm text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral sm:max-w-xs"
         />
-        <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-line bg-white">
+        <div className="inline-flex rounded-xl border border-line bg-white p-1">
           {[
             { value: "", label: "Todas" },
             { value: "active", label: "Activas" },
@@ -54,15 +55,15 @@ export default async function AdminPropertiesPage({
           ].map((f) => (
             <label key={f.label} className="cursor-pointer">
               <input type="radio" name="status" value={f.value} defaultChecked={(byStatus ?? "") === f.value} className="peer sr-only" />
-              <span className="inline-flex h-11 items-center justify-center px-4 text-sm font-semibold text-mute transition peer-checked:bg-ink peer-checked:text-white">
+              <span className="inline-flex h-9 items-center justify-center rounded-lg px-4 text-sm font-semibold text-mute transition peer-checked:bg-ink peer-checked:text-white">
                 {f.label}
               </span>
             </label>
           ))}
         </div>
-        <button type="submit" className="btn-primary h-11 rounded-xl px-5">
+        <Button type="submit" size="lg" className="h-11 rounded-xl px-5">
           Filtrar
-        </button>
+        </Button>
       </form>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -89,7 +90,9 @@ export default async function AdminPropertiesPage({
               </div>
             </div>
             <div className="flex flex-1 flex-col gap-2 p-4">
-              <h2 className="text-lg font-bold leading-tight text-ink">{p.name}</h2>
+              <Link href={`/admin/casas/${p.id}`} className="text-lg font-bold leading-tight text-ink hover:text-coral-deep">
+                {p.name}
+              </Link>
               <p className="text-sm text-mute">{p.location_label}</p>
               <div className="mt-1 flex flex-wrap items-center gap-x-3 text-xs text-mute">
                 <span className="inline-flex items-center gap-1">
@@ -105,13 +108,11 @@ export default async function AdminPropertiesPage({
                   {formatUSD(p.price_per_night)}
                   <span className="text-xs font-medium text-mute">/noche</span>
                 </p>
-                <Link
-                  href={`/admin/casas/${p.id}`}
-                  aria-label={`Editar ${p.name}`}
-                  className="inline-flex size-9 items-center justify-center rounded-full bg-ink text-white transition group-hover:bg-coral-deep"
-                >
-                  <ChevronRight className="size-4" aria-hidden />
-                </Link>
+                <RowActions
+                  siteHref={`/casas/${p.slug}`}
+                  siteLabel="Ver en el sitio"
+                  editHref={`/admin/casas/${p.id}`}
+                />
               </div>
             </div>
           </article>

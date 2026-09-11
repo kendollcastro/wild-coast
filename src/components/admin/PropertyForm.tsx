@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, ImagePlus, Trash2 } from "lucide-react";
 import { savePropertyAction, type SaveResult } from "@/app/admin/catalog-actions";
 import type { AdminProperty, AdminPhotoInput } from "@/server/domain/admin/catalog";
+import { Button } from "@/components/ui/button";
 
 function Field({
   label,
@@ -330,13 +331,9 @@ export function PropertyForm({
           <ArrowLeft className="size-4" aria-hidden />
           Volver al listado
         </Link>
-        <button
-          type="submit"
-          disabled={pending}
-          className="btn-primary inline-flex h-11 items-center justify-center rounded-xl px-6 disabled:opacity-60"
-        >
+        <Button type="submit" size="lg" className="rounded-xl px-6" disabled={pending}>
           {pending ? "Guardando…" : property ? "Guardar cambios" : "Crear casa"}
-        </button>
+        </Button>
       </div>
     </form>
   );

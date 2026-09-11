@@ -12,15 +12,12 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const counts = await getAdminBadgeCounts();
 
   return (
-    <div className="min-h-dvh bg-paper text-ink">
-      <AdminSidebar
-        pendingBookings={counts.pendingBookings}
-        pendingCommissions={counts.pendingCommissions}
-        adminEmail={user.email}
-      />
-      <main id="main" className="lg:pl-60">
-        <div className="mx-auto max-w-7xl px-4 py-6 md:px-6 lg:px-8 lg:py-8">{children}</div>
-      </main>
-    </div>
+    <AdminSidebar
+      pendingBookings={counts.pendingBookings}
+      pendingCommissions={counts.pendingCommissions}
+      adminEmail={user.email}
+    >
+      {children}
+    </AdminSidebar>
   );
 }

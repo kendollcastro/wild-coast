@@ -7,6 +7,7 @@ import { ArrowLeft, ImagePlus, Plus, Trash2 } from "lucide-react";
 import { saveTourAction, type SaveResult } from "@/app/admin/catalog-actions";
 import type { AdminTour, AdminPhotoInput } from "@/server/domain/admin/catalog";
 import type { TourPricingOption } from "@/server/db/schema.types";
+import { Button } from "@/components/ui/button";
 
 const inputCls =
   "w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink outline-1 outline-transparent transition focus:outline-coral focus:border-coral";
@@ -321,13 +322,9 @@ export function TourForm({ tour }: { tour: AdminTour | null }) {
           <ArrowLeft className="size-4" aria-hidden />
           Volver al listado
         </Link>
-        <button
-          type="submit"
-          disabled={pending}
-          className="btn-primary inline-flex h-11 items-center justify-center rounded-xl px-6 disabled:opacity-60"
-        >
+        <Button type="submit" size="lg" className="rounded-xl px-6" disabled={pending}>
           {pending ? "Guardando…" : tour ? "Guardar cambios" : "Crear tour"}
-        </button>
+        </Button>
       </div>
     </form>
   );

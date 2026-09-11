@@ -16,7 +16,7 @@ export default async function AdminTourEditPage({ params }: { params: Promise<{ 
     <section className="mx-auto max-w-3xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-coral-deep">Catálogo</p>
+          <p className="eyebrow text-coral-deep">Catálogo</p>
           <h1 className="text-2xl font-bold tracking-tight text-ink">Editar tour</h1>
           <p className="mt-1 text-sm text-mute">
             <Link href={`/tours/${tour.slug}`} className="text-coral-deep hover:underline" target="_blank">

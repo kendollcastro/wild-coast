@@ -45,14 +45,15 @@
   --color-viola-deep: #6e06b8;
   --color-viola-soft: #f2e4fe;
 
-  /* Sidebar admin (navy oscuro) */
-  --color-sidebar-bg: #171f38;
-  --color-sidebar-text: #ffffff;
-  --color-sidebar-muted: #9fa8b8; /* faint sobre ink: 6.8:1 AA */
-  --color-sidebar-accent: #f54a00;
-  --color-sidebar-active: rgb(255 255 255 / 0.1);
-  --color-sidebar-hover: rgb(255 255 255 / 0.06);
-  --color-sidebar-border: rgb(255 255 255 / 0.12);
+  /* Sidebar admin (tema claro) — tokens shadcn/ui */
+  --color-sidebar: #ffffff;
+  --color-sidebar-foreground: #171f38; /* ink */
+  --color-sidebar-primary: #f54a00; /* coral */
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: #f4f1ec; /* papel suave */
+  --color-sidebar-accent-foreground: #171f38;
+  --color-sidebar-border: #e8e6df; /* line */
+  --color-sidebar-ring: #f54a00; /* coral */
 
   /* Semánticos shadcn/ui */
   --color-background: var(--background);

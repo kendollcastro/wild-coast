@@ -1,6 +1,10 @@
 "use client";
 
 import { CountUp } from "@/components/site/CountUp";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
 
 export function StatCard({
   label,
@@ -14,11 +18,13 @@ export function StatCard({
   tone?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-line bg-white p-5 shadow-soft">
-      <p className="text-[11px] font-semibold uppercase tracking-widest text-mute">{label}</p>
-      <p className={`mt-2 tabular-nums text-3xl font-extrabold tracking-tight text-ink ${tone ?? ""}`}>
-        <CountUp value={value} formatType={formatType} />
-      </p>
-    </div>
+    <Card>
+      <CardContent className="grid gap-2">
+        <p className="text-xs font-semibold uppercase tracking-widest text-mute">{label}</p>
+        <p className={`tabular-nums text-3xl font-extrabold tracking-tight text-ink ${tone ?? ""}`}>
+          <CountUp value={value} formatType={formatType} />
+        </p>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, Compass, Plus } from "lucide-react";
+import { Compass, Plus } from "lucide-react";
 import { listAdminTours } from "@/server/domain/admin/catalog";
 import { formatUSD } from "@/lib/format";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { RowActions } from "@/components/admin/RowActions";
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Tours · admin" };
 
@@ -14,16 +16,15 @@ export default async function AdminToursPage() {
     <section className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-coral-deep">Catálogo</p>
+          <p className="eyebrow text-coral-deep">Catálogo</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink">Tours</h1>
         </div>
-        <Link
-          href="/admin/tours/nueva"
-          className="inline-flex h-11 items-center gap-2 rounded-xl bg-ink px-4 text-sm font-semibold text-white transition hover:bg-coral-deep"
-        >
-          <Plus className="size-4" aria-hidden />
-          Nuevo tour
-        </Link>
+        <Button asChild size="lg" className="rounded-xl px-4">
+          <Link href="/admin/tours/nueva">
+            <Plus className="size-4" aria-hidden />
+            Nuevo tour
+          </Link>
+        </Button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -58,7 +59,9 @@ export default async function AdminToursPage() {
               </div>
             </div>
             <div className="flex flex-1 flex-col gap-2 p-4">
-              <h2 className="text-lg font-bold leading-tight text-ink">{t.name}</h2>
+              <Link href={`/admin/tours/${t.id}`} className="text-lg font-bold leading-tight text-ink hover:text-coral-deep">
+                {t.name}
+              </Link>
               <p className="text-sm text-mute">
                 {t.category ?? "Tour"} · {t.duration ?? `${t.duration_hours ?? "—"} h`}
               </p>
@@ -72,13 +75,11 @@ export default async function AdminToursPage() {
                   {formatUSD(t.price)}
                   <span className="text-xs font-medium text-mute">/persona</span>
                 </p>
-                <Link
-                  href={`/admin/tours/${t.id}`}
-                  aria-label={`Editar ${t.name}`}
-                  className="inline-flex size-9 items-center justify-center rounded-full bg-ink text-white transition group-hover:bg-coral-deep"
-                >
-                  <ChevronRight className="size-4" aria-hidden />
-                </Link>
+                <RowActions
+                  siteHref={`/tours/${t.slug}`}
+                  siteLabel="Ver en el sitio"
+                  editHref={`/admin/tours/${t.id}`}
+                />
               </div>
             </div>
           </article>

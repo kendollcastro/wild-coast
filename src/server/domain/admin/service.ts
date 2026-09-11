@@ -11,6 +11,7 @@ export type BookingFilters = {
   status?: BookingStatus;
   type?: "tour" | "property";
   from?: string;
+  to?: string;
   query?: string;
 };
 
@@ -112,7 +113,8 @@ export async function listBookings(filters: BookingFilters = {}): Promise<AdminB
 
   if (filters.status) query = query.eq("status", filters.status);
   if (filters.type) query = query.eq("booking_type", filters.type);
-  if (filters.from) query = query.gte("created_at", filters.from);
+  if (filters.from) query = query.gte("created_at", `${filters.from.slice(0, 10)}T00:00:00.000Z`);
+  if (filters.to) query = query.lte("created_at", `${filters.to.slice(0, 10)}T23:59:59.999Z`);
 
   const { data, error } = await query;
   if (error) {
