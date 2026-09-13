@@ -14,7 +14,7 @@ export default function NotFound() {
         <Link href="/" className="btn-primary">
           Ir a la home
         </Link>
-        <Link href="/casas" className="btn-outline">
+        <Link href="/es/casas" className="btn-outline">
           Ver las casas
         </Link>
       </div>

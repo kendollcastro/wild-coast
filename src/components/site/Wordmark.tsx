@@ -1,16 +1,17 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function Wordmark({ href = "/", light = false }: { href?: string; light?: boolean }) {
   return (
-    <Link href={href} className="group inline-flex items-baseline gap-0.5">
-      <span
-        className={`font-display text-[1.35rem] font-extrabold tracking-tight lowercase ${
-          light ? "text-white" : "text-ink"
-        }`}
-      >
-        jacó
-      </span>
-      <span className="size-1.5 -translate-y-[2px] rounded-full bg-coral transition-transform duration-200 group-hover:scale-150" />
+    <Link href={href} className="group inline-flex items-center">
+      <Image
+        src={light ? "/images/Wild-Coast-Costa-Rica-logo-header.png" : "/images/Wild-Coast-Costa-Rica-logo-header-orange.png"}
+        alt="Wild Coast"
+        width={160}
+        height={40}
+        priority
+        className="h-10 w-auto transition-opacity duration-200 group-hover:opacity-80"
+      />
     </Link>
   );
 }

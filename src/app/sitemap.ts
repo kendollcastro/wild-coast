@@ -1,12 +1,16 @@
 import type { MetadataRoute } from "next";
-import { listActiveProperties, listActiveTours } from "@/server/domain/catalog/service";
+import { listActiveProperties, listActiveTours, listActiveCombos } from "@/server/domain/catalog/service";
 import { locales } from "@/i18n/config";
 import { urlFor } from "@/lib/seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [properties, tours] = await Promise.all([listActiveProperties(), listActiveTours()]);
+  const [properties, tours, combos] = await Promise.all([
+    listActiveProperties(),
+    listActiveTours(),
+    listActiveCombos(),
+  ]);
 
-const entries: MetadataRoute.Sitemap = [];
+  const entries: MetadataRoute.Sitemap = [];
 
   for (const locale of locales) {
     const push = (
@@ -23,6 +27,7 @@ const entries: MetadataRoute.Sitemap = [];
     push("", 1, "weekly");
     push("casas", 0.9, "daily");
     push("tours", 0.9, "daily");
+    push("combos", 0.8, "weekly");
 
     for (const p of properties) {
       entries.push({
@@ -38,6 +43,14 @@ const entries: MetadataRoute.Sitemap = [];
         changeFrequency: "daily" as const,
         priority: 0.7,
         lastModified: t.updated_at,
+      });
+    }
+    for (const c of combos) {
+      entries.push({
+        url: urlFor(locale, `combos/${c.slug}`),
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+        lastModified: c.updated_at,
       });
     }
   }

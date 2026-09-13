@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BadgeCheck, Clock, Handshake, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useI18n } from "./i18n-provider";
 import { switchLocalePathname } from "@/i18n/localized-href";
@@ -44,25 +44,30 @@ export function MainNav() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [howActive, setHowActive] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  const isHome = pathname === `/${locale}` || pathname === `/${locale}/` || pathname === "/";
+
+  const effectiveScrolled = isHome ? scrolled : true;
 
   useEffect(() => {
-    const el = document.getElementById("como-funciona");
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => setHowActive(entry.isIntersecting),
-      { rootMargin: "0px 0px -85% 0px", threshold: 0 },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
+    const onScroll = () => setScrolled(window.scrollY > 80);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const isActive = (href: string) =>
-    href === "/#como-funciona" ? howActive : pathname.startsWith(`/${locale}${href}`);
+  const isActive = (href: string) => pathname.startsWith(`/${locale}${href}`);
 
   const navClass = (active: boolean) =>
-    `rounded-full px-3.5 py-2 text-sm font-semibold transition-colors ${
-      active ? "bg-ink text-white" : "text-ink/80 hover:bg-muted hover:text-ink"
+    `rounded-full px-4 py-2 text-[15px] font-semibold transition-colors ${
+      active
+        ? effectiveScrolled
+          ? "bg-ink text-white"
+          : "bg-white/25 text-white"
+        : effectiveScrolled
+          ? "text-ink hover:bg-muted hover:text-ink"
+          : "text-white hover:bg-white/15 hover:text-white"
     }`;
 
   const switchTo = (target: Locale) => {
@@ -74,45 +79,37 @@ export function MainNav() {
   const switchTitle = locale === "es" ? dict.nav.switchToEn : dict.nav.switchToEs;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/85 backdrop-blur-md">
-      <div className="hidden border-b border-line bg-white/60 sm:block" aria-hidden>
-        <div className="mx-auto flex h-9 max-w-6xl items-center gap-6 px-4">
-          {dict.nav.trustBar.map((label, i) => {
-            const TrustIcon = [BadgeCheck, Handshake, Clock][i % 3];
-            return (
-              <p key={label} className="flex items-center gap-1.5 text-xs font-medium text-mute">
-                <TrustIcon className="size-3.5 text-coral-deep" aria-hidden />
-                {label}
-              </p>
-            );
-          })}
-        </div>
-      </div>
-
+    <header
+      className={`sticky top-0 z-40 transition-all duration-300 ${
+        effectiveScrolled
+          ? "border-b border-line bg-paper/95 backdrop-blur-md"
+          : "border-b border-transparent bg-transparent"
+      }`}
+    >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-        <Wordmark />
+        <Wordmark light={!effectiveScrolled} />
 
         <nav className="hidden items-center gap-1 sm:flex" aria-label={dict.nav.navAria}>
           <Link
-            href="casas"
+            href={`/${locale}/casas`}
             aria-current={isActive("/casas") ? "page" : undefined}
             className={navClass(isActive("/casas"))}
           >
             {dict.nav.casas}
           </Link>
           <Link
-            href="tours"
+            href={`/${locale}/tours`}
             aria-current={isActive("/tours") ? "page" : undefined}
             className={navClass(isActive("/tours"))}
           >
             {dict.nav.tours}
           </Link>
           <Link
-            href="#como-funciona"
-            aria-current={isActive("/#como-funciona") ? "page" : undefined}
-            className={navClass(isActive("/#como-funciona"))}
+            href={`/${locale}/combos`}
+            aria-current={isActive("/combos") ? "page" : undefined}
+            className={navClass(isActive("/combos"))}
           >
-            {dict.nav.how}
+            {dict.nav.combos}
           </Link>
         </nav>
 
@@ -122,14 +119,22 @@ export function MainNav() {
             onClick={() => switchTo(other)}
             title={switchTitle}
             aria-label={`${dict.nav.languageAria}: ${locale === "es" ? dict.nav.labelEn : dict.nav.labelEs}`}
-className="hidden min-h-11 items-center gap-1.5 rounded-full border border-line bg-white px-3.5 text-sm font-bold text-ink transition-colors hover:bg-muted sm:inline-flex"
+className={`hidden min-h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-bold transition-colors sm:inline-flex ${
+              effectiveScrolled
+                ? "border border-line bg-white text-ink"
+                : "border border-white/30 bg-white/10 text-white backdrop-blur-md hover:bg-white/20"
+            }`}
             >
               <MiniFlag country={other === "en" ? "uk" : "cr"} />
               {locale === "es" ? "EN" : "ES"}
             </button>
           <Link
-            href="casas"
-            className="btn-primary btn-sm hidden rounded-full sm:inline-flex"
+            href={`/${locale}/casas`}
+            className={`hidden rounded-full sm:inline-flex ${
+              effectiveScrolled
+                ? "btn-primary btn-sm"
+                : "border border-coral bg-coral px-5 py-2 text-sm font-semibold text-white transition-all hover:bg-coral-deep"
+            }`}
           >
             {dict.nav.reserve}
           </Link>
@@ -137,7 +142,11 @@ className="hidden min-h-11 items-center gap-1.5 rounded-full border border-line 
             type="button"
             onClick={() => setOpen(true)}
             aria-label={dict.nav.openMenu}
-            className="inline-flex size-11 items-center justify-center rounded-full border border-line bg-white text-ink sm:hidden"
+            className={`inline-flex size-11 items-center justify-center rounded-full sm:hidden ${
+              effectiveScrolled
+                ? "border border-line bg-white text-ink"
+                : "border border-white/30 bg-white/10 text-white backdrop-blur-md"
+            }`}
           >
             <Menu className="size-5" aria-hidden />
           </button>
@@ -149,7 +158,7 @@ className="hidden min-h-11 items-center gap-1.5 rounded-full border border-line 
           <SheetTitle className="sr-only">{dict.nav.menuTitle}</SheetTitle>
           <nav className="flex flex-col gap-1 px-3 pt-16" aria-label={dict.nav.navAriaMobile}>
             <Link
-              href="casas"
+              href={`/${locale}/casas`}
               onClick={() => setOpen(false)}
               aria-current={isActive("/casas") ? "page" : undefined}
               className={`rounded-xl px-4 py-3 text-base font-semibold ${
@@ -159,7 +168,7 @@ className="hidden min-h-11 items-center gap-1.5 rounded-full border border-line 
               {dict.nav.casas}
             </Link>
             <Link
-              href="tours"
+              href={`/${locale}/tours`}
               onClick={() => setOpen(false)}
               aria-current={isActive("/tours") ? "page" : undefined}
               className={`rounded-xl px-4 py-3 text-base font-semibold ${
@@ -169,14 +178,14 @@ className="hidden min-h-11 items-center gap-1.5 rounded-full border border-line 
               {dict.nav.tours}
             </Link>
             <Link
-              href="#como-funciona"
+              href={`/${locale}/combos`}
               onClick={() => setOpen(false)}
-              aria-current={isActive("/#como-funciona") ? "page" : undefined}
+              aria-current={isActive("/combos") ? "page" : undefined}
               className={`rounded-xl px-4 py-3 text-base font-semibold ${
-                isActive("/#como-funciona") ? "bg-ink text-white" : "text-ink/85 hover:bg-muted"
+                isActive("/combos") ? "bg-ink text-white" : "text-ink/85 hover:bg-muted"
               }`}
             >
-              {dict.nav.how}
+              {dict.nav.combos}
             </Link>
             <button
               type="button"
@@ -198,7 +207,7 @@ className="hidden min-h-11 items-center gap-1.5 rounded-full border border-line 
               </span>
             </button>
             <Link
-              href="casas"
+              href={`/${locale}/casas`}
               onClick={() => setOpen(false)}
               className="btn-primary mt-4 w-full rounded-full"
             >

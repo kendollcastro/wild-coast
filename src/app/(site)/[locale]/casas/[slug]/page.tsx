@@ -43,7 +43,7 @@ export async function generateMetadata({
     openGraph: {
       type: "article",
       locale: ogLocale(locale),
-      siteName: "jacó",
+      siteName: "Wild Coast",
       title,
       description,
       url: urlFor(locale, `casas/${slug}`),
@@ -82,7 +82,7 @@ export default async function CasaDetailPage({
   return (
     <section className="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:pb-20 sm:pt-8">
       <Link
-        href="casas"
+        href="../casas"
         className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-mute transition-colors hover:text-coral"
       >
         <ArrowLeft className="size-4" /> {t.back}

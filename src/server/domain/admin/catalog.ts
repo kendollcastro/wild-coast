@@ -6,6 +6,8 @@ import type {
   PhotoView,
   ToursRow,
   TourPricingOption,
+  ComboStatus,
+  CombosRow,
 } from "@/server/db/schema.types";
 
 export type AdminProperty = PropertiesRow & {
@@ -411,6 +413,212 @@ export async function deleteAdminTour(id: string): Promise<{ ok: boolean; error?
   const { error } = await supabase.from("tours").delete().eq("id", id);
   if (error) {
     console.error("[admin.catalog] delete tour:", error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Combos
+// ---------------------------------------------------------------------------
+
+export type AdminCombo = {
+  id: string;
+  slug: string;
+  name: string;
+  name_en: string | null;
+  name_es: string | null;
+  description: string | null;
+  description_en: string | null;
+  description_es: string | null;
+  property_id: string;
+  discount_pct: number;
+  badge_text: string | null;
+  badge_color: string | null;
+  featured: boolean;
+  status: ComboStatus;
+  created_at: string;
+  updated_at: string;
+  photos: PhotoView[];
+  tours: { id: string; name: string; slug: string; price: number; provider: string }[];
+  property: { id: string; name: string; slug: string; price_per_night: number } | null;
+};
+
+export type AdminComboInput = {
+  id?: string | null;
+  slug: string;
+  name_es: string;
+  name_en: string;
+  description_es: string;
+  description_en: string;
+  property_id: string;
+  discount_pct: string;
+  badge_text: string;
+  badge_color: string;
+  featured: boolean;
+  status: ComboStatus;
+  tour_ids: string[];
+};
+
+export async function listAdminCombos(): Promise<AdminCombo[]> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("combos")
+    .select("*")
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.error("[admin.catalog] listAdminCombos:", error);
+    return [];
+  }
+
+  const comboIds = (data ?? []).map((c) => c.id);
+
+  const [photosResult, comboToursResult, propertiesResult, toursResult] = await Promise.all([
+    comboIds.length > 0
+      ? supabase.from("combo_photos").select("*").in("combo_id", comboIds)
+      : { data: [], error: null },
+    comboIds.length > 0
+      ? supabase.from("combo_tours").select("combo_id, tour_id, sort_order").in("combo_id", comboIds)
+      : { data: [], error: null },
+    supabase.from("properties").select("id, name, slug, price_per_night"),
+    supabase.from("tours").select("id, name, slug, price, provider"),
+  ]);
+
+  const photosByCombo = new Map<string, PhotoView[]>();
+  for (const p of photosResult.data ?? []) {
+    const list = photosByCombo.get(p.combo_id) ?? [];
+    list.push({ id: p.id, url: p.url, alt: p.alt, sort_order: p.sort_order });
+    photosByCombo.set(p.combo_id, list);
+  }
+
+  const tourIdsByCombo = new Map<string, string[]>();
+  for (const ct of comboToursResult.data ?? []) {
+    const list = tourIdsByCombo.get(ct.combo_id) ?? [];
+    list.push(ct.tour_id);
+    tourIdsByCombo.set(ct.combo_id, list);
+  }
+
+  const toursMap = new Map((toursResult.data ?? []).map((t) => [t.id, t]));
+  const propertiesMap = new Map((propertiesResult.data ?? []).map((p) => [p.id, p]));
+
+  return (data ?? []).map((combo) => ({
+    ...combo,
+    updated_at: combo.updated_at ?? combo.created_at,
+    photos: (photosByCombo.get(combo.id) ?? []).sort((a, b) => a.sort_order - b.sort_order),
+    tours: (tourIdsByCombo.get(combo.id) ?? [])
+      .map((tid) => toursMap.get(tid))
+      .filter(Boolean) as AdminCombo["tours"],
+    property: propertiesMap.get(combo.property_id) ?? null,
+  }));
+}
+
+export async function getAdminCombo(id: string): Promise<AdminCombo | null> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("combos")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+  if (error || !data) return null;
+
+  const [photosResult, comboToursResult, propertyResult, toursResult] = await Promise.all([
+    supabase.from("combo_photos").select("*").eq("combo_id", id).order("sort_order"),
+    supabase.from("combo_tours").select("tour_id, sort_order").eq("combo_id", id).order("sort_order"),
+    supabase.from("properties").select("id, name, slug, price_per_night").eq("id", data.property_id).maybeSingle(),
+    supabase.from("tours").select("id, name, slug, price, provider"),
+  ]);
+
+  const tourIds = (comboToursResult.data ?? []).map((ct) => ct.tour_id);
+  const toursMap = new Map((toursResult.data ?? []).map((t) => [t.id, t]));
+
+  return {
+    ...data,
+    updated_at: data.updated_at ?? data.created_at,
+    photos: (photosResult.data ?? []).map((p) => ({ id: p.id, url: p.url, alt: p.alt, sort_order: p.sort_order })),
+    tours: tourIds.map((tid) => toursMap.get(tid)).filter(Boolean) as AdminCombo["tours"],
+    property: propertyResult.data ?? null,
+  };
+}
+
+export async function saveAdminCombo(
+  input: AdminComboInput,
+  photos: AdminPhotoInput[],
+): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const supabase = getSupabaseAdmin();
+  const name = input.name_es.trim() || input.name_en.trim() || "Sin nombre";
+
+  const payload = {
+    slug:
+      input.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "") ||
+      name.toLowerCase().replace(/[^a-z0-9-]+/g, "-"),
+    name,
+    name_es: input.name_es.trim() || null,
+    name_en: input.name_en.trim() || null,
+    description: input.description_es.trim() || input.description_en.trim() || null,
+    description_es: input.description_es.trim() || null,
+    description_en: input.description_en.trim() || null,
+    property_id: input.property_id,
+    discount_pct: Number(input.discount_pct) || 15,
+    badge_text: input.badge_text.trim() || null,
+    badge_color: input.badge_color.trim() || null,
+    featured: input.featured,
+    status: input.status,
+    updated_at: new Date().toISOString(),
+  } as Partial<CombosRow>;
+
+  let id = input.id;
+  if (id) {
+    const { error } = await supabase
+      .from("combos")
+      .update(payload)
+      .eq("id", id);
+    if (error) {
+      console.error("[admin.catalog] update combo:", error);
+      return { ok: false, error: error.message };
+    }
+  } else {
+    const { data, error } = await supabase.from("combos").insert(payload).select("id").single();
+    if (error) {
+      console.error("[admin.catalog] insert combo:", error);
+      return { ok: false, error: error.message };
+    }
+    id = data.id;
+  }
+
+  // Sync combo_tours
+  const { error: delTours } = await supabase.from("combo_tours").delete().eq("combo_id", id);
+  if (delTours) return { ok: false, error: delTours.message };
+  const tourRows = input.tour_ids.map((tour_id, i) => ({ combo_id: id!, tour_id, sort_order: i }));
+  if (tourRows.length > 0) {
+    const { error } = await supabase.from("combo_tours").insert(tourRows);
+    if (error) {
+      console.error("[admin.catalog] insert combo_tours:", error);
+      return { ok: false, error: error.message };
+    }
+  }
+
+  // Sync combo_photos
+  const { error: delPhotos } = await supabase.from("combo_photos").delete().eq("combo_id", id);
+  if (delPhotos) return { ok: false, error: delPhotos.message };
+  const photoRows = photos
+    .map((p, i) => ({ combo_id: id!, url: p.url.trim(), alt: p.alt.trim() || null, sort_order: i }))
+    .filter((p) => p.url);
+  if (photoRows.length > 0) {
+    const { error } = await supabase.from("combo_photos").insert(photoRows);
+    if (error) {
+      console.error("[admin.catalog] insert combo photos:", error);
+      return { ok: false, error: error.message };
+    }
+  }
+
+  return { ok: true, id };
+}
+
+export async function deleteAdminCombo(id: string): Promise<{ ok: boolean; error?: string }> {
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase.from("combos").delete().eq("id", id);
+  if (error) {
+    console.error("[admin.catalog] delete combo:", error);
     return { ok: false, error: error.message };
   }
   return { ok: true };

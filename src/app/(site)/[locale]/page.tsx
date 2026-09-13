@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import {
-  BadgeCheck,
   CalendarCheck,
   Check,
   Compass,
@@ -11,11 +9,12 @@ import {
   Star,
 } from "lucide-react";
 import { notFound } from "next/navigation";
-import { listActiveProperties, listActiveTours } from "@/server/domain/catalog/service";
+import { listActiveProperties, listActiveTours, listActiveCombos } from "@/server/domain/catalog/service";
 import { isLocale, locales, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
-import { localizeProperty, localizeTour } from "@/server/domain/catalog/localize";
+import { localizeProperty, localizeTour, localizeCombo } from "@/server/domain/catalog/localize";
 import { alternatesFor, ogLocale, urlFor } from "@/lib/seo";
+import { CinematicHero } from "@/components/site/CinematicHero";
 import { websiteSchema, organizationSchema, itemListSchema } from "@/lib/jsonld";
 import { PropertyCard } from "@/components/site/PropertyCard";
 import { HomeSearch } from "@/components/site/HomeSearch";
@@ -33,9 +32,7 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
-const HERO_IMAGE = "/images/flyboard-vamos-jaco-tours-001.jpg";
-
-/* OG/twitter usan URL absoluta de Unsplash hasta setear NEXT_PUBLIC_SITE_URL. */
+/* OG/twitter usan URL absoluta de Unsplash hasta setear SITE_URL. */
 const HERO_OG_IMAGE =
   "https://images.unsplash.com/photo-1494783367193-149034c05e8f?q=70&w=1200&auto=format&fit=crop";
 
@@ -60,7 +57,7 @@ export async function generateMetadata({
     openGraph: {
       type: "website",
       locale: ogLocale(locale),
-      siteName: "jacó",
+      siteName: "Wild Coast",
       title: dict.meta.homeTitle,
       description: dict.meta.homeDescription,
       url: urlFor(locale, ""),
@@ -89,14 +86,20 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const dict = await getDictionary(locale);
   const t = dict.home;
 
-  const [properties, tours] = await Promise.all([listActiveProperties(), listActiveTours()]);
+  const [properties, tours, combos] = await Promise.all([listActiveProperties(), listActiveTours(), listActiveCombos()]);
   const localizedProperties = properties.map((p) => localizeProperty(p, locale));
   const localizedTours = tours.map((tour) => localizeTour(tour, locale));
+  const localizedCombos = combos.map((combo) => localizeCombo(combo, locale));
 
   const featured = localizedProperties.filter((p) => p.featured);
   const displayProperties = (featured.length > 0 ? featured : localizedProperties).slice(0, 3);
   const casasCount = localizedProperties.length;
   const toursCount = localizedTours.length;
+
+  const minPrice = localizedProperties.length > 0
+    ? Math.min(...localizedProperties.map((p) => Number(p.price_per_night) || Infinity).filter((n) => n < Infinity))
+    : null;
+  const priceFrom = minPrice != null && minPrice < Infinity ? `US$${minPrice}` : undefined;
 
   const tickerItems = [
     ...localizedProperties.map((p) => p.name),
@@ -107,72 +110,18 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   return (
     <>
       {/* Hero */}
-      <section className="grain relative flex min-h-[72svh] items-center overflow-hidden">
-        <Image
-          src={HERO_IMAGE}
-          alt={t.hero.imageAlt}
-          priority
-          fill
-          sizes="100vw"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/30 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-paper via-transparent to-black/10" />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-gradient-to-bl from-turquesa/25 via-transparent to-transparent"
-        />
-
-        <div className="hero-up relative mx-auto grid w-full max-w-6xl grid-cols-12 items-center gap-10 px-4 pb-28 pt-24 text-center lg:pb-36 lg:text-left">
-          <div className="col-span-12 lg:col-span-7">
-            <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white ring-1 ring-white/25 backdrop-blur-md">
-              <BadgeCheck className="size-4 text-pina" aria-hidden />
-              {t.hero.badge}
-            </p>
-            <h1 className="mt-5 max-w-3xl font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl">
-              {t.hero.pre}{" "}
-              <span className="relative inline-block">
-                <span className="font-serif italic">{t.hero.accent}</span>
-                <svg
-                  viewBox="0 0 250 12"
-                  aria-hidden
-                  className="absolute -bottom-1.5 left-0 h-3 w-full text-coral"
-                  fill="none"
-                >
-                  <path d="M3 9C60 2.5 180 2 247 9" stroke="currentColor" strokeLinecap="round" strokeWidth="4" />
-                </svg>
-              </span>
-            </h1>
-            <p className="mt-5 max-w-xl text-base text-white/85 sm:text-lg">{t.hero.sub}</p>
-
-            <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Link
-                href="casas"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-coral-deep px-6 py-3 text-sm font-semibold text-white shadow-soft-lg transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110"
-              >
-                <House className="size-4" aria-hidden />
-                {t.hero.explore}
-              </Link>
-              <Link
-                href="tours"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/15"
-              >
-                <Compass className="size-4" aria-hidden />
-                {t.hero.tours}
-              </Link>
-            </div>
-
-            <p className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-medium text-white/75">
-              {t.hero.proof.map((label) => (
-                <span key={label} className="flex items-center gap-1.5">
-                  <Check className="size-3.5 text-pina" aria-hidden />
-                  {label}
-                </span>
-              ))}
-            </p>
-          </div>
-        </div>
-      </section>
+      <CinematicHero
+        badge={t.hero.badge}
+        pre={t.hero.pre}
+        accent={t.hero.accent}
+        sub={t.hero.sub}
+        explore={t.hero.explore}
+        tours={t.hero.tours}
+        proof={t.hero.proof}
+        imageAlt={t.hero.imageAlt}
+        priceFrom={priceFrom}
+        locale={locale}
+      />
 
       {/* Buscador superpuesto */}
       <section className="relative z-20 mx-auto -mt-16 max-w-6xl px-4 sm:-mt-24">
@@ -196,7 +145,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                 : t.featured.empty}
             </p>
           </div>
-          <Link href="casas" className="btn-outline btn-sm shrink-0">
+          <Link href={`/${locale}/casas`} className="btn-outline btn-sm shrink-0">
             {t.featured.all}
           </Link>
         </div>
@@ -264,7 +213,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                 : t.tours.empty}
             </p>
           </div>
-          <Link href="tours" className="btn-outline btn-sm shrink-0">
+          <Link href={`/${locale}/tours`} className="btn-outline btn-sm shrink-0">
             {t.tours.all}
           </Link>
         </div>
@@ -273,7 +222,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       </section>
 
       {/* Destacadas de la semana */}
-      <DealsSection properties={localizedProperties} tours={localizedTours} locale={locale} dict={dict} />
+      <DealsSection properties={localizedProperties} tours={localizedTours} combos={localizedCombos} locale={locale} dict={dict} />
 
       {/* Testimonios */}
       <section className="border-b border-line">
@@ -348,13 +297,13 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
               <div className="mt-7 flex flex-wrap gap-3">
                 <Link
-                  href="casas"
+                  href={`/${locale}/casas`}
                   className="btn-glow inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-[15px] font-semibold text-ink shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:shadow-soft-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
                   {t.cta.explore}
                 </Link>
                 <Link
-                  href="tours"
+                  href={`/${locale}/tours`}
                   className="btn rounded-full border border-white/25 px-6 py-3 text-sm text-white hover:bg-white/10"
                 >
                   {t.cta.tours}
@@ -393,7 +342,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         <p className="mt-3 text-center text-xs text-faint">{t.cta.bottom}</p>
       </section>
 
-      {/* Zonas de Jacó */}
+      {/* Zonas de Wild Coast */}
       <ExploreZones properties={localizedProperties} dict={dict} locale={locale} />
 
       <JsonLd

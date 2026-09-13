@@ -88,11 +88,15 @@ export async function createBookingRequest(input: BookingInput): Promise<CreateB
   // (Fygaro), acá se crea el checkout y se redirige al huésped.
   const payment = await getPaymentAdapter().createCheckout({
     booking,
-    returnUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "/",
+    returnUrl: process.env.SITE_URL ?? "/",
   });
 
   // Notificaciones al dueño/proveedor y al cliente (mejor esfuerzo).
-  await sendBookingNotifications(booking);
+  try {
+    await sendBookingNotifications(booking);
+  } catch (err) {
+    console.error("Booking notifications failed (non-blocking):", err);
+  }
 
   return { ok: true, booking, payment };
 }

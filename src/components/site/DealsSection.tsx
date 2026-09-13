@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BedDouble, Flame, Users } from "lucide-react";
-import type { LocalizedProperty, LocalizedTour } from "@/server/domain/catalog/localize";
+import { ArrowRight, BedDouble, Flame, Package, Users } from "lucide-react";
+import type { LocalizedProperty, LocalizedTour, LocalizedCombo } from "@/server/domain/catalog/localize";
 import { formatUSD } from "@/lib/format";
+import { calculateComboPrice } from "@/lib/combo";
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries/es";
 
@@ -26,16 +27,29 @@ type DealItem =
       unit: string;
       href: string;
       photo?: { url: string; alt?: string | null } | null;
+    }
+  | {
+      kind: "combo";
+      name: string;
+      property: string;
+      tourCount: number;
+      originalPrice: number;
+      comboPrice: number;
+      discount: number;
+      href: string;
+      photo?: { url: string; alt?: string | null } | null;
     };
 
 export function DealsSection({
   properties,
   tours,
+  combos,
   locale,
   dict,
 }: {
   properties: LocalizedProperty[];
   tours: LocalizedTour[];
+  combos: LocalizedCombo[];
   locale: Locale;
   dict: Dictionary;
 }) {
@@ -46,6 +60,9 @@ export function DealsSection({
 
   const pickTours = (list: LocalizedTour[]): LocalizedTour[] =>
     [...list.filter((x) => x.featured), ...list.filter((x) => !x.featured)];
+
+  const pickCombos = (list: LocalizedCombo[]): LocalizedCombo[] =>
+    [...list.filter((c) => c.featured), ...list.filter((c) => !c.featured)];
 
   const items: DealItem[] = [
     ...pick(properties)
@@ -72,6 +89,26 @@ export function DealsSection({
         href: `/${locale}/tours/${tour.slug}`,
         photo: tour.photos[0] ?? null,
       })),
+    ...pickCombos(combos)
+      .slice(0, 1)
+      .map((combo) => {
+        const prices = calculateComboPrice(
+          { discount_pct: combo.discount_pct },
+          combo.property,
+          combo.tours,
+        );
+        return {
+          kind: "combo" as const,
+          name: combo.name,
+          property: combo.property?.name ?? "",
+          tourCount: combo.tours.length,
+          originalPrice: prices.original,
+          comboPrice: prices.comboPrice,
+          discount: combo.discount_pct,
+          href: `/${locale}/combos/${combo.slug}`,
+          photo: combo.photos[0] ?? combo.property?.photos[0] ?? null,
+        };
+      }),
   ];
 
   return (
@@ -129,13 +166,13 @@ export function DealsSection({
                   </div>
                 )}
                 <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-coral-deep px-2.5 py-1 text-[11px] font-bold text-white shadow-soft-lg">
-                  {t.badge}
+                  {item.kind === "combo" ? `${item.discount}% off` : t.badge}
                 </span>
               </div>
 
               <div className="flex flex-1 flex-col p-5">
                 <p className="text-[11px] font-bold uppercase tracking-wide text-faint">
-                  {item.kind === "casa" ? item.location : item.provider}
+                  {item.kind === "casa" ? item.location : item.kind === "tour" ? item.provider : item.property}
                 </p>
                 <h3 className="mt-1 line-clamp-2 font-display text-lg font-bold leading-snug text-ink">
                   {item.name}
@@ -154,15 +191,40 @@ export function DealsSection({
                   </p>
                 )}
 
-                <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-4">
-                  <p className="flex min-w-0 flex-col gap-0.5">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-mute">
-                      {t.from} · {item.unit}
-                    </span>
-                    <span className="font-display text-2xl font-extrabold leading-none tabular-nums text-ink">
-                      {formatUSD(item.price)}
+                {item.kind === "combo" && (
+                  <p className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-mute">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">
+                      <Package className="size-3 text-coral-deep" aria-hidden />
+                      {item.tourCount} tour{item.tourCount !== 1 ? "s" : ""}
                     </span>
                   </p>
+                )}
+
+                <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-4">
+                  {item.kind === "combo" ? (
+                    <p className="flex min-w-0 flex-col gap-0.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-mute">
+                        {t.from}
+                      </span>
+                      <span className="flex items-baseline gap-1.5">
+                        <span className="font-display text-2xl font-extrabold leading-none tabular-nums text-ink">
+                          {formatUSD(item.comboPrice)}
+                        </span>
+                        <span className="text-[10px] text-mute line-through">
+                          {formatUSD(item.originalPrice)}
+                        </span>
+                      </span>
+                    </p>
+                  ) : (
+                    <p className="flex min-w-0 flex-col gap-0.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-mute">
+                        {t.from} · {item.unit}
+                      </span>
+                      <span className="font-display text-2xl font-extrabold leading-none tabular-nums text-ink">
+                        {formatUSD(item.price)}
+                      </span>
+                    </p>
+                  )}
                   <span
                     className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-ink text-white transition-colors duration-300 group-hover:bg-coral-deep group-hover:shadow-soft"
                     aria-hidden

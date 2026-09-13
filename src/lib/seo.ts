@@ -1,6 +1,6 @@
 import type { Locale } from "@/i18n/config";
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+export const SITE_URL = process.env.SITE_URL ?? "http://localhost:3000";
 
 /** URL absoluta de una ruta en un locale (es sin prefijo, en con /en). */
 export function urlFor(locale: Locale, path: string): string {

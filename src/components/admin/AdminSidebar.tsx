@@ -11,6 +11,7 @@ import {
   Home,
   LayoutDashboard,
   LogOut,
+  Package,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -141,6 +142,7 @@ export function AdminSidebar({
                 items={[
                   { label: "Casas", icon: Home, href: "/admin/casas" },
                   { label: "Tours", icon: Compass, href: "/admin/tours" },
+                  { label: "Combos", icon: Package, href: "/admin/combos" },
                   { label: "Disponibilidad y calendario", icon: CalendarRange, href: "/admin/disponibilidad" },
                 ]}
               />

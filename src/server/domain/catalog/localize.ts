@@ -1,4 +1,4 @@
-import type { PropertyWithPhotos, TourWithPhotos } from "@/server/db/schema.types";
+import type { PropertyWithPhotos, TourWithPhotos, ComboWithPhotos } from "@/server/db/schema.types";
 import type { Locale } from "@/i18n/config";
 
 export type LocalizedTour = Omit<TourWithPhotos, "name" | "description"> & {
@@ -45,4 +45,20 @@ export function localizeProperty(property: PropertyWithPhotos, locale: Locale): 
     ? (property.amenities_en?.length ? property.amenities_en : property.amenities)
     : property.amenities) as string[];
   return { ...property, name, description, location_label, amenities };
+}
+
+export type LocalizedCombo = Omit<ComboWithPhotos, "name" | "description"> & {
+  name: string;
+  description: string | null;
+};
+
+/** Combo localizado: nombre y descripción con fallback EN → ES → base. */
+export function localizeCombo(combo: ComboWithPhotos, locale: Locale): LocalizedCombo {
+  const name =
+    locale === "en" ? (combo.name_en ?? combo.name_es ?? combo.name) : (combo.name_es ?? combo.name);
+  const description =
+    locale === "en"
+      ? (combo.description_en ?? combo.description_es ?? combo.description)
+      : (combo.description_es ?? combo.description);
+  return { ...combo, name, description };
 }

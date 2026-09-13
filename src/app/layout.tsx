@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Onest, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ResourceHints } from "@/components/seo/ResourceHints";
@@ -31,41 +32,54 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "jacó · casas de alquiler y tours",
+  title: {
+    template: "%s · Wild Coast",
+    default: "Wild Coast · casas de alquiler y tours en Jacó, Costa Rica",
+  },
   description:
     "Casas de alquiler y tours en Jacó, Costa Rica. Reservá directo con anfitriones locales — playa, selva y atardeceres del Pacífico.",
   metadataBase: new URL(siteUrl),
+  icons: {
+    icon: [
+      { url: "/images/wild-coast-favicon-32x32.svg", type: "image/svg+xml" },
+      { url: "/images/Wild-Coast-favicon-big-android.png", sizes: "192x192", type: "image/png" },
+      { url: "/images/Wild-Coast-favicon-xl-pwa-app.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/images/Wild-Coast-favicon-apple.png",
+  },
   openGraph: {
     type: "website",
     locale: "es_CR",
-    siteName: "jacó",
-    title: "jacó · casas de alquiler y tours",
+    siteName: "Wild Coast",
+    title: "Wild Coast · casas de alquiler y tours",
     description:
       "Casas de alquiler y tours en Jacó, Costa Rica. Reservá directo con anfitriones locales.",
     url: siteUrl,
     images: [
       {
-        url: "https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=1200&q=80",
+        url: "/images/og-img-wild-coast.jpg",
         width: 1200,
         height: 630,
-        alt: "Playa en Jacó, Costa Rica",
+        alt: "Wild Coast — casas, tours y paquetes en Jacó, Costa Rica",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "jacó · casas de alquiler y tours",
+    title: "Wild Coast · casas de alquiler y tours",
     description:
       "Casas de alquiler y tours en Jacó, Costa Rica. Reservá directo con anfitriones locales.",
-    images: ["https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=1200&q=80"],
+    images: ["/images/og-img-wild-coast.jpg"],
   },
 };
 
 // Resource hints para orígenes externos que impactan LCP (hero de Unsplash).
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const h = await headers();
+  const lang = h.get("x-locale") === "en" ? "en" : "es";
   return (
-    <html lang="es" className={`${onest.variable} ${instrument.variable} ${jetbrainsMono.variable} h-full antialiased`}>
+    <html lang={lang} className={`${onest.variable} ${instrument.variable} ${jetbrainsMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <ResourceHints />
         {children}

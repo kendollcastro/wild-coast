@@ -4,6 +4,7 @@ import { I18nProvider } from "./i18n-provider";
 import { HtmlLang } from "./HtmlLang";
 import { MainNav } from "./MainNav";
 import { SiteFooter } from "./SiteFooter";
+import { StickyCTA } from "./StickyCTA";
 
 export function SiteShell({
   locale,
@@ -28,7 +29,8 @@ export function SiteShell({
         <main id="main" className="flex-1">
           {children}
         </main>
-        <SiteFooter dict={dict} />
+        <SiteFooter dict={dict} locale={locale} />
+        <StickyCTA />
       </I18nProvider>
     </div>
   );

@@ -5,10 +5,12 @@ import { requireAdminSession } from "@/server/auth/session";
 import {
   deleteAdminProperty,
   deleteAdminTour,
+  deleteAdminCombo,
   saveAdminProperty,
   saveAdminTour,
+  saveAdminCombo,
 } from "@/server/domain/admin/catalog";
-import type { ListingStatus, TourPricingOption } from "@/server/db/schema.types";
+import type { ListingStatus, ComboStatus, TourPricingOption } from "@/server/db/schema.types";
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "");
 const checkbox = (fd: FormData, key: string) => fd.get(key) === "on";
@@ -142,6 +144,61 @@ export async function deleteTourAction(formData: FormData): Promise<SaveResult> 
   const result = await deleteAdminTour(text(formData, "tour_id"));
   if (result.ok) {
     revalidatePath("/admin/tours");
+    revalidatePath("/", "layout");
+  }
+  return result;
+}
+
+export async function saveComboAction(formData: FormData): Promise<SaveResult> {
+  await requireAdminSession();
+  const id = text(formData, "id") || null;
+  const status = (text(formData, "status") || "inactive") as ComboStatus;
+
+  const tourIds = Array.from(formData.keys())
+    .filter((k) => k.startsWith("tour_id_"))
+    .sort((a, b) => Number(a.replace("tour_id_", "")) - Number(b.replace("tour_id_", "")))
+    .map((k) => text(formData, k))
+    .filter(Boolean);
+
+  const photoKeys = Array.from(formData.keys())
+    .filter((k) => k.startsWith("photo_url_"))
+    .sort((a, b) => Number(a.replace("photo_url_", "")) - Number(b.replace("photo_url_", "")));
+  const photos = photoKeys.map((k) => ({
+    url: text(formData, k),
+    alt: text(formData, k.replace("photo_url_", "photo_alt_")),
+  }));
+
+  const result = await saveAdminCombo(
+    {
+      id,
+      slug: text(formData, "slug"),
+      name_es: text(formData, "name_es"),
+      name_en: text(formData, "name_en"),
+      description_es: text(formData, "description_es"),
+      description_en: text(formData, "description_en"),
+      property_id: text(formData, "property_id"),
+      discount_pct: text(formData, "discount_pct"),
+      badge_text: text(formData, "badge_text"),
+      badge_color: text(formData, "badge_color"),
+      featured: checkbox(formData, "featured"),
+      status,
+      tour_ids: tourIds,
+    },
+    photos,
+  );
+
+  if (result.ok) {
+    revalidatePath("/admin/combos");
+    revalidatePath("/", "layout");
+  }
+  return result;
+}
+
+export async function deleteComboAction(formData: FormData): Promise<SaveResult> {
+  await requireAdminSession();
+  const result = await deleteAdminCombo(text(formData, "combo_id"));
+  if (result.ok) {
+    revalidatePath("/admin/combos");
     revalidatePath("/", "layout");
   }
   return result;

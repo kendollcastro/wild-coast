@@ -1,4 +1,4 @@
-import type { LocalizedProperty, LocalizedTour } from "@/server/domain/catalog/localize";
+import type { LocalizedProperty, LocalizedTour, LocalizedCombo } from "@/server/domain/catalog/localize";
 import type { Locale } from "@/i18n/config";
 import { SITE_URL, urlFor } from "@/lib/seo";
 
@@ -8,8 +8,8 @@ export function websiteSchema(): JsonLdObject {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "jacó",
-    alternateName: "Jacó Vacation Rentals",
+    name: "Wild Coast",
+    alternateName: "Wild Coast Costa Rica",
     url: SITE_URL,
     inLanguage: ["es", "en"],
     publisher: organizationSchema(),
@@ -20,7 +20,7 @@ export function organizationSchema(): JsonLdObject {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "jacó",
+    name: "Wild Coast",
     url: SITE_URL,
   };
 }
@@ -108,7 +108,7 @@ export function breadcrumbSchema(
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "jacó", item: urlFor(locale, "") },
+      { "@type": "ListItem", position: 1, name: "Wild Coast", item: urlFor(locale, "") },
       ...items.map((item, i) => ({
         "@type": "ListItem",
         position: i + 2,
@@ -116,6 +116,33 @@ export function breadcrumbSchema(
         item: urlFor(locale, item.path),
       })),
     ],
+  };
+}
+
+/** Product + Offer para un combo casa+tour (detalle). */
+export function comboSchema(
+  combo: LocalizedCombo,
+  locale: Locale,
+  comboPrice: number,
+): JsonLdObject {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: combo.name,
+    description: combo.description ?? undefined,
+    image: absImage(combo.photos[0]?.url),
+    url: urlFor(locale, `combos/${combo.slug}`),
+    brand: { "@type": "Organization", name: "Wild Coast" },
+    additionalProperty: [
+      { "@type": "PropertyValue", name: "Descuento", value: `${combo.discount_pct}%` },
+    ],
+    offers: {
+      "@type": "Offer",
+      price: comboPrice,
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+      url: urlFor(locale, `combos/${combo.slug}`),
+    },
   };
 }
 

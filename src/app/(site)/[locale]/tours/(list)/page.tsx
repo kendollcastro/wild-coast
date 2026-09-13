@@ -32,15 +32,24 @@ export async function generateMetadata({
     openGraph: {
       type: "website",
       locale: ogLocale(locale),
-      siteName: "jacó",
+      siteName: "Wild Coast",
       title: dict.meta.toursTitle,
       description,
       url: urlFor(locale, "tours"),
+      images: [
+        {
+          url: "https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=1200&q=80",
+          width: 1200,
+          height: 630,
+          alt: "Tours y experiencias en Jacó, Costa Rica",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: dict.meta.toursTitle,
       description,
+      images: ["https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=1200&q=80"],
     },
   };
 }

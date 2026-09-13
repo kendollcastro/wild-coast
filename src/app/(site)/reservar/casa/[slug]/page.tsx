@@ -31,7 +31,7 @@ export default async function CasaReservaPage({
   return (
     <section className="mx-auto max-w-6xl px-4 pb-28 pt-8 sm:pb-20 sm:pt-10">
       <Link
-        href={`/casas/${property.slug}`}
+        href={`/es/casas/${property.slug}`}
         className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-mute transition-colors hover:text-coral"
       >
         <ArrowLeft className="size-4" /> Volver a la casa

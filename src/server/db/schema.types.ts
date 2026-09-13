@@ -7,6 +7,7 @@ export type BookingType = 'tour' | 'property';
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled';
 export type CommissionStatus = 'pending' | 'paid';
 export type AvailabilityKind = 'booking' | 'blocked' | 'owner';
+export type ComboStatus = 'active' | 'inactive';
 
 // ---- shared column shapes --------------------------------------------------
 
@@ -170,6 +171,41 @@ type CommissionsRow = Timestamped & {
   notes: string | null;
 };
 
+// ---- combos ----------------------------------------------------------------
+
+export type CombosRow = Timestamped & {
+  id: string;
+  slug: string;
+  name: string;
+  name_en: string | null;
+  name_es: string | null;
+  description: string | null;
+  description_en: string | null;
+  description_es: string | null;
+  property_id: string;
+  discount_pct: number;
+  badge_text: string | null;
+  badge_color: string | null;
+  featured: boolean;
+  status: ComboStatus;
+  updated_at: string;
+};
+
+export type ComboToursRow = {
+  id: string;
+  combo_id: string;
+  tour_id: string;
+  sort_order: number;
+};
+
+export type ComboPhotosRow = {
+  id: string;
+  combo_id: string;
+  url: string;
+  alt: string | null;
+  sort_order: number;
+};
+
 // ---- admins ----------------------------------------------------------------
 
 type AdminsRow = Timestamped & {
@@ -213,6 +249,12 @@ export type TourWithPhotos = ToursRow & {
 export type PropertyWithPhotos = PropertiesRow & {
   photos: PhotoView[];
   owner?: Pick<OwnersRow, 'id' | 'name'> | null;
+};
+
+export type ComboWithPhotos = CombosRow & {
+  photos: PhotoView[];
+  tours: TourWithPhotos[];
+  property?: PropertyWithPhotos | null;
 };
 
 // ---- Supabase Database generic ---------------------------------------------
@@ -349,6 +391,55 @@ export interface Database {
         Update: Partial<AdminsRow>;
         Relationships: [];
       };
+      combos: {
+        Row: CombosRow;
+        Insert: Partial<CombosRow>;
+        Update: Partial<CombosRow>;
+        Relationships: [
+          {
+            foreignKeyName: "combos_property_id_fkey";
+            columns: ["property_id"];
+            isOneToOne: false;
+            referencedRelation: "properties";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      combo_tours: {
+        Row: ComboToursRow;
+        Insert: Partial<ComboToursRow>;
+        Update: Partial<ComboToursRow>;
+        Relationships: [
+          {
+            foreignKeyName: "combo_tours_combo_id_fkey";
+            columns: ["combo_id"];
+            isOneToOne: false;
+            referencedRelation: "combos";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "combo_tours_tour_id_fkey";
+            columns: ["tour_id"];
+            isOneToOne: false;
+            referencedRelation: "tours";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      combo_photos: {
+        Row: ComboPhotosRow;
+        Insert: Partial<ComboPhotosRow>;
+        Update: Partial<ComboPhotosRow>;
+        Relationships: [
+          {
+            foreignKeyName: "combo_photos_combo_id_fkey";
+            columns: ["combo_id"];
+            isOneToOne: false;
+            referencedRelation: "combos";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -366,6 +457,7 @@ export interface Database {
       booking_status: BookingStatus;
       commission_status: CommissionStatus;
       availability_kind: AvailabilityKind;
+      combo_status: ComboStatus;
     };
     CompositeTypes: Record<string, never>;
   };
