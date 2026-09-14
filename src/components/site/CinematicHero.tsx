@@ -60,7 +60,7 @@ export function CinematicHero({
 
   return (
     <MotionConfig reducedMotion="user">
-      <section className="relative -mt-16 flex min-h-[calc(85svh+4rem)] items-center overflow-clip pt-[160px] lg:-mt-[100px] lg:min-h-[calc(85svh+100px)] lg:pt-[196px]">
+      <section className="relative -mt-16 flex min-h-[calc(85svh+4rem)] items-center overflow-clip pt-[140px] pb-20 lg:-mt-[100px] lg:min-h-[calc(85svh+100px)] lg:pt-[196px] lg:pb-36">
         {/* Background — rotating images with crossfade */}
         <div className="absolute inset-0 overflow-hidden" aria-hidden>
           <AnimatePresence mode="sync">
@@ -114,7 +114,7 @@ export function CinematicHero({
         {/* Content — parallax + staggered entrance */}
         <motion.div
           style={{ y: fgY, opacity: fgOpacity }}
-          className="relative z-10 mx-auto grid w-full max-w-6xl grid-cols-12 items-center gap-10 px-4 pb-28 pt-24 text-center lg:pb-36 lg:text-left"
+          className="relative z-10 mx-auto grid w-full max-w-6xl grid-cols-12 items-center gap-10 px-4 text-center lg:pb-36 lg:pt-0 lg:text-left"
         >
           <div className="col-span-12 lg:col-span-8">
             {/* Badge */}

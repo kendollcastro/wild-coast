@@ -10,7 +10,7 @@ export function SiteFooter({ dict, locale }: { dict: Dictionary; locale: Locale 
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
         <div className="space-y-3">
           <Image
-            src="/images/Wild-Coast-Costa-Rica-logo-header-orange.png"
+            src="/images/Wild-Coast-Costa-Rica-logo-header-orange.svg"
             alt="Wild Coast"
             width={200}
             height={48}

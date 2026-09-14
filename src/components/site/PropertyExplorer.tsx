@@ -129,7 +129,7 @@ export function PropertyExplorer({ properties }: { properties: LocalizedProperty
           <div
             role="tablist"
             aria-label={t.viewAria}
-            className="rounded-full border border-line bg-white p-1 shadow-soft"
+            className="flex rounded-full border border-line bg-white p-1 shadow-soft"
           >
             <button
               type="button"

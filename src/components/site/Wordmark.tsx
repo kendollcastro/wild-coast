@@ -5,10 +5,10 @@ export function Wordmark({ href = "/", light = false }: { href?: string; light?:
   return (
     <Link href={href} className="group inline-flex items-center">
       <Image
-        src={light ? "/images/Wild-Coast-Costa-Rica-logo-header.png" : "/images/Wild-Coast-Costa-Rica-logo-header-orange.png"}
+        src={light ? "/images/Wild-Coast-Costa-Rica-logo-header.svg" : "/images/Wild-Coast-Costa-Rica-logo-header-orange.svg"}
         alt="Wild Coast"
-        width={160}
-        height={40}
+        width={180}
+        height={45}
         priority
         className="h-10 w-auto transition-opacity duration-200 group-hover:opacity-80"
       />
