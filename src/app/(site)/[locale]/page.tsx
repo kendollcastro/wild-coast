@@ -13,7 +13,7 @@ import { listActiveProperties, listActiveTours, listActiveCombos } from "@/serve
 import { isLocale, locales, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/get-dictionary";
 import { localizeProperty, localizeTour, localizeCombo } from "@/server/domain/catalog/localize";
-import { alternatesFor, ogLocale, urlFor } from "@/lib/seo";
+import { alternatesFor, ogLocale, urlFor, SITE_URL } from "@/lib/seo";
 import { CinematicHero } from "@/components/site/CinematicHero";
 import { websiteSchema, organizationSchema, itemListSchema } from "@/lib/jsonld";
 import { PropertyCard } from "@/components/site/PropertyCard";
@@ -32,9 +32,7 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
-/* OG/twitter usan URL absoluta de Unsplash hasta setear SITE_URL. */
-const HERO_OG_IMAGE =
-  "https://images.unsplash.com/photo-1494783367193-149034c05e8f?q=70&w=1200&auto=format&fit=crop";
+const HERO_OG_IMAGE = `${SITE_URL}/images/og-img-wild-coast.jpg`;
 
 const PILLAR_ICONS = {
   explore: { icon: House, wrap: "bg-coral-soft text-coral-deep" },
